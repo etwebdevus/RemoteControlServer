@@ -107,8 +107,9 @@
                     }
 
                     const img = streamDiv.querySelector('img');
-                    img.src = `data:image/jpeg;base64,${image}`; // Append timestamp to prevent caching
-                    
+                    const timestamp = new Date().getTime();
+                    img.src = `/screenshots/screen_${streamId}.jpg?t=${timestamp}`; // Append timestamp to prevent caching
+
                 }
             };
 
