@@ -35,7 +35,7 @@ wss.on('connection', (ws) => {
                 });
             } else if (id && image) {
                 const buffer = Buffer.from(image, 'base64');
-                const filePath = path.join('screenshots', `screen_${id}.jpg`);
+                const filePath = path.join('public/screenshots', `screen_${id}.jpg`);
                 fs.writeFileSync(filePath, buffer);
                 console.log(`Saved screenshot to ${filePath}`);
 
