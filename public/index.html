@@ -107,8 +107,8 @@
                     }
 
                     const img = streamDiv.querySelector('img');
-                    const timestamp = new Date().getTime(); // Generate a unique timestamp
-                    img.src = `data:image/jpeg;base64,${image}?t=${timestamp}`; // Append timestamp to prevent caching
+                    img.src = `data:image/jpeg;base64,${image}`; // Append timestamp to prevent caching
+                    
                 }
             };
 
