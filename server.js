@@ -10,7 +10,7 @@ const wss = new WebSocket.Server({ server });
 
 app.use(express.static('public'));
 
-app.get('/check', (req, res) => {
+app.get('/check_status', (req, res) => {
     res.send('Server is running!');
   });
 
