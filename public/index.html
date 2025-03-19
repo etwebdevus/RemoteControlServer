@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screen Stream</title>
+    <style>
+        #imageContainer {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .stream {
+            margin: 10px;
+        }
+        .stream img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Screen Stream</h1>
+    <label for="streamIdInput">Stream ID:</label>
+    <input type="text" id="streamIdInput" placeholder="Enter Stream ID" value="uniqueId">
+    <button id="connectButton">Connect</button>
+    <div id="imageContainer"></div>
+
+    <script>
+        let ws;
+        const imageContainer = document.getElementById('imageContainer');
+        const connectButton = document.getElementById('connectButton');
+        const streamIdInput = document.getElementById('streamIdInput');
+
+        connectButton.addEventListener('click', () => {
+            const streamId = streamIdInput.value.trim();
+            if (!streamId) {
+                alert('Please enter a Stream ID');
+                return;
+            }
+
+            if (ws) {
+                ws.close();
+            }
+
+            // Dynamically construct WebSocket URL
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}`;
+
+            ws = new WebSocket(wsUrl);
+
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                const { id, image } = message;
+                if (!id || !image) return;
+                if (id === streamId) {
+                    let streamDiv = document.getElementById(id);
+                    if (!streamDiv) {
+                        streamDiv = document.createElement('div');
+                        streamDiv.id = id;
+                        streamDiv.className = 'stream';
+                        streamDiv.innerHTML = `<h2>Stream ID: ${id}</h2><img src="" alt="Stream Image">`;
+                        imageContainer.appendChild(streamDiv);
+
+                        const img = streamDiv.querySelector('img');
+                        // img.addEventListener('mousemove', (e) => {
+                        //     const rect = img.getBoundingClientRect();
+                        //     const x = e.clientX - rect.left;
+                        //     const y = e.clientY - rect.top;
+                        //     const relativeX = x / rect.width;
+                        //     const relativeY = y / rect.height;
+
+                        //     if (ws && ws.readyState === WebSocket.OPEN) {
+                        //         ws.send(JSON.stringify({ id: streamId, type: 'mouseMove', x: relativeX, y: relativeY }));
+                        //     }
+                        // });
+
+                        
+                        img.addEventListener('mousedown', (e) => {
+                            const rect = img.getBoundingClientRect();
+                            const x = e.clientX - rect.left;
+                            const y = e.clientY - rect.top;
+                            const relativeX = x / rect.width;
+                            const relativeY = y / rect.height;
+
+                            if (ws && ws.readyState === WebSocket.OPEN) {
+                                ws.send(JSON.stringify({ id: streamId, type: 'mouseClick', x: relativeX, y: relativeY, button: e.button }));
+                            }
+                        });
+                    }
+
+                    const img = streamDiv.querySelector('img');
+                    img.src = `data:image/jpeg;base64,${image}`;
+                }
+            };
+
+            ws.onopen = () => {
+                console.log(`Connected to stream ID: ${streamId}`);
+            };
+
+            ws.onclose = () => {
+                console.log('Disconnected from server');
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+        });
+    </script>
+</body>
+</html>
