@@ -10,6 +10,10 @@ const wss = new WebSocket.Server({ server });
 
 app.use(express.static('public'));
 
+app.get('/check', (req, res) => {
+    res.send('Server is running!');
+  });
+
 console.log("WebSocket Server running on ws://localhost:8080");
 
 wss.on('connection', (ws) => {
