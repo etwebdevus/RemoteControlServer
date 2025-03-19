@@ -25,12 +25,12 @@ wss.on('connection', (ws) => {
         try {
             const message = JSON.parse(data);
             const { id, image, type, x, y } = message;
-
-            if (['mouseMove', 'mouseClick'].includes(type)) {
+            const mouseEvents = ['mousemove', 'mousedown', 'mouseup', 'click', 'dblclick', 'contextmenu'];
+            if (mouseEvents.includes(type)) {
                 // Broadcast the image to all connected clients
                 wss.clients.forEach(client => {
                     if (client.readyState === WebSocket.OPEN) {
-                        client.send(JSON.stringify({ id, type, x, y}));
+                        client.send(data);
                     }
                 });
             } else if (id && image) {
