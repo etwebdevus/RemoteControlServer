@@ -74,8 +74,12 @@
                         //     }
                         // });
 
+                        img.addEventListener('contextmenu', (e) => {
+                            e.preventDefault(); // Prevent the default context menu from appearing
+                        });
                         
                         img.addEventListener('mousedown', (e) => {
+                            e.preventDefault(); // Prevent the default context menu from appearing
                             const rect = img.getBoundingClientRect();
                             const x = e.clientX - rect.left;
                             const y = e.clientY - rect.top;
