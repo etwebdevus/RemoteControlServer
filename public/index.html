@@ -62,38 +62,53 @@
                         imageContainer.appendChild(streamDiv);
 
                         const img = streamDiv.querySelector('img');
-                        // img.addEventListener('mousemove', (e) => {
-                        //     const rect = img.getBoundingClientRect();
-                        //     const x = e.clientX - rect.left;
-                        //     const y = e.clientY - rect.top;
-                        //     const relativeX = x / rect.width;
-                        //     const relativeY = y / rect.height;
 
-                        //     if (ws && ws.readyState === WebSocket.OPEN) {
-                        //         ws.send(JSON.stringify({ id: streamId, type: 'mouseMove', x: relativeX, y: relativeY }));
-                        //     }
-                        // });
+                        const mouseEvents = ['mousemove', 'mousedown', 'mouseup', 'click', 'dblclick', 'contextmenu'];
+                                                
+                        mouseEvents.forEach((eventType) => {
+                            img.addEventListener(eventType, (e) => {
+                                e.preventDefault(); // Prevent default behavior for certain events like contextmenu
 
-                        img.addEventListener('contextmenu', (e) => {
-                            e.preventDefault(); // Prevent the default context menu from appearing
-                        });
-                        
-                        img.addEventListener('mousedown', (e) => {
-                            e.preventDefault(); // Prevent the default context menu from appearing
-                            const rect = img.getBoundingClientRect();
-                            const x = e.clientX - rect.left;
-                            const y = e.clientY - rect.top;
-                            const relativeX = x / rect.width;
-                            const relativeY = y / rect.height;
+                                const rect = img.getBoundingClientRect();
+                                const x = e.clientX - rect.left;
+                                const y = e.clientY - rect.top;
+                                const relativeX = x / rect.width;
+                                const relativeY = y / rect.height;
 
-                            if (ws && ws.readyState === WebSocket.OPEN) {
-                                ws.send(JSON.stringify({ id: streamId, type: 'mouseClick', x: relativeX, y: relativeY, button: e.button }));
-                            }
+                                // Determine the mouse button type (if applicable)
+                                let buttonType = null;
+                                if (e.type === 'mousedown' || e.type === 'mouseup' || e.type === 'click' || e.type === 'contextmenu') {
+                                    switch (e.button) {
+                                        case 0:
+                                            buttonType = 'left';
+                                            break;
+                                        case 1:
+                                            buttonType = 'middle';
+                                            break;
+                                        case 2:
+                                            buttonType = 'right';
+                                            break;
+                                        default:
+                                            buttonType = 'unknown';
+                                    }
+                                }
+
+                                if (ws && ws.readyState === WebSocket.OPEN) {
+                                    ws.send(JSON.stringify({
+                                        id: streamId,
+                                        type: eventType, // The type of mouse event (e.g., 'mousemove', 'mousedown')
+                                        x: relativeX,
+                                        y: relativeY,
+                                        button: buttonType // Include button type if applicable
+                                    }));
+                                }
+                            });
                         });
                     }
 
                     const img = streamDiv.querySelector('img');
-                    img.src = `data:image/jpeg;base64,${image}`;
+                    const timestamp = new Date().getTime(); // Generate a unique timestamp
+                    img.src = `data:image/jpeg;base64,${image}?t=${timestamp}`; // Append timestamp to prevent caching
                 }
             };
 
