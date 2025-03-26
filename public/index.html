@@ -27,6 +27,7 @@
 
     <script>
         let ws;
+        let previousImage = null;
         const imageContainer = document.getElementById('imageContainer');
         const connectButton = document.getElementById('connectButton');
         const streamIdInput = document.getElementById('streamIdInput');
@@ -106,10 +107,25 @@
                         });
                     }
 
-                    const img = streamDiv.querySelector('img');
-                    const timestamp = new Date().getTime();
-                    img.src = `data:image/jpeg;base64,${image}`; // Append timestamp to prevent caching
+                    
+                    const newImg = new Image();
+                    newImg.src = `data:image/jpeg;base64,${image}`;
+                    newImg.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
 
+                        canvas.width = newImg.width;
+                        canvas.height = newImg.height;
+
+                        if (previousImage) {
+                            ctx.drawImage(previousImage, 0, 0); // Draw the previous image
+                        }
+                        ctx.drawImage(newImg, 0, 0); // Overlay the diff
+
+                        const img = streamDiv.querySelector('img');
+                        img.src = canvas.toDataURL('image/jpeg'); // Update the displayed image
+                        previousImage = newImg; // Update the previous image
+                    };
                 }
             };
 
@@ -124,6 +140,32 @@
             ws.onerror = (error) => {
                 console.error('WebSocket error:', error);
             };
+
+            document.addEventListener('keydown', (e) => handleKeyboardEvent(e, 'keydown'));
+            document.addEventListener('keyup', (e) => handleKeyboardEvent(e, 'keyup'));
+
+            // Function to handle keyboard events
+            function handleKeyboardEvent(e, eventType) {
+                // Prevent default behavior for certain keys if needed
+                e.preventDefault();
+
+                // Construct the keyboard event data
+                const keyEventData = {
+                    id: streamId, // Stream ID
+                    type: eventType, // Event type (keydown or keyup)
+                    key: e.key, // The key value (e.g., "a", "Enter", "ArrowUp")
+                    code: e.code, // The physical key code (e.g., "KeyA", "Enter", "ArrowUp")
+                    ctrlKey: e.ctrlKey, // Whether the Control key is pressed
+                    shiftKey: e.shiftKey, // Whether the Shift key is pressed
+                    altKey: e.altKey, // Whether the Alt key is pressed
+                    metaKey: e.metaKey // Whether the Meta key (Command/Windows) is pressed
+                };
+
+                // Send the keyboard event data to the server
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify(keyEventData));
+                }
+            }
         });
     </script>
 </body>
