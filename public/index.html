@@ -50,82 +50,87 @@
             ws = new WebSocket(wsUrl);
 
             ws.onmessage = (event) => {
-                const message = JSON.parse(event.data);
-                const { id, image } = message;
-                if (!id || !image) return;
-                if (id === streamId) {
-                    let streamDiv = document.getElementById(id);
-                    if (!streamDiv) {
-                        streamDiv = document.createElement('div');
-                        streamDiv.id = id;
-                        streamDiv.className = 'stream';
-                        streamDiv.innerHTML = `<h2>Stream ID: ${id}</h2><img src="" alt="Stream Image">`;
-                        imageContainer.appendChild(streamDiv);
+                try {
+                    const message = JSON.parse(event.data);
+                    const { id, image } = message;
+                    if (!id || !image) return;
+                    if (id === streamId) {
+                        let streamDiv = document.getElementById(id);
+                        if (!streamDiv) {
+                            streamDiv = document.createElement('div');
+                            streamDiv.id = id;
+                            streamDiv.className = 'stream';
+                            streamDiv.innerHTML = `<h2>Stream ID: ${id}</h2><img src="" alt="Stream Image">`;
+                            imageContainer.appendChild(streamDiv);
 
-                        const img = streamDiv.querySelector('img');
+                            const img = streamDiv.querySelector('img');
 
-                        const mouseEvents = ['mousemove', 'mousedown', 'mouseup', 'click', 'dblclick', 'contextmenu'];
-                                                
-                        mouseEvents.forEach((eventType) => {
-                            img.addEventListener(eventType, (e) => {
-                                e.preventDefault(); // Prevent default behavior for certain events like contextmenu
+                            const mouseEvents = ['mousemove', 'mousedown', 'mouseup', 'click', 'dblclick', 'contextmenu'];
+                                                    
+                            mouseEvents.forEach((eventType) => {
+                                img.addEventListener(eventType, (e) => {
+                                    e.preventDefault(); // Prevent default behavior for certain events like contextmenu
 
-                                const rect = img.getBoundingClientRect();
-                                const x = e.clientX - rect.left;
-                                const y = e.clientY - rect.top;
-                                const relativeX = x / rect.width;
-                                const relativeY = y / rect.height;
+                                    const rect = img.getBoundingClientRect();
+                                    const x = e.clientX - rect.left;
+                                    const y = e.clientY - rect.top;
+                                    const relativeX = x / rect.width;
+                                    const relativeY = y / rect.height;
 
-                                // Determine the mouse button type (if applicable)
-                                let buttonType = null;
-                                if (e.type === 'mousedown' || e.type === 'mouseup' || e.type === 'click' || e.type === 'contextmenu') {
-                                    switch (e.button) {
-                                        case 0:
-                                            buttonType = 'left';
-                                            break;
-                                        case 1:
-                                            buttonType = 'middle';
-                                            break;
-                                        case 2:
-                                            buttonType = 'right';
-                                            break;
-                                        default:
-                                            buttonType = 'unknown';
+                                    // Determine the mouse button type (if applicable)
+                                    let buttonType = null;
+                                    if (e.type === 'mousedown' || e.type === 'mouseup' || e.type === 'click' || e.type === 'contextmenu') {
+                                        switch (e.button) {
+                                            case 0:
+                                                buttonType = 'left';
+                                                break;
+                                            case 1:
+                                                buttonType = 'middle';
+                                                break;
+                                            case 2:
+                                                buttonType = 'right';
+                                                break;
+                                            default:
+                                                buttonType = 'unknown';
+                                        }
                                     }
-                                }
 
-                                if (ws && ws.readyState === WebSocket.OPEN) {
-                                    ws.send(JSON.stringify({
-                                        id: streamId,
-                                        type: eventType, // The type of mouse event (e.g., 'mousemove', 'mousedown')
-                                        x: relativeX,
-                                        y: relativeY,
-                                        button: buttonType // Include button type if applicable
-                                    }));
-                                }
+                                    if (ws && ws.readyState === WebSocket.OPEN) {
+                                        ws.send(JSON.stringify({
+                                            id: streamId,
+                                            type: eventType, // The type of mouse event (e.g., 'mousemove', 'mousedown')
+                                            x: relativeX,
+                                            y: relativeY,
+                                            button: buttonType // Include button type if applicable
+                                        }));
+                                    }
+                                });
                             });
-                        });
-                    }
-
-                    
-                    const newImg = new Image();
-                    newImg.src = `data:image/jpeg;base64,${image}`;
-                    newImg.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const ctx = canvas.getContext('2d');
-
-                        canvas.width = newImg.width;
-                        canvas.height = newImg.height;
-
-                        if (previousImage) {
-                            ctx.drawImage(previousImage, 0, 0); // Draw the previous image
                         }
-                        ctx.drawImage(newImg, 0, 0); // Overlay the diff
 
-                        const img = streamDiv.querySelector('img');
-                        img.src = canvas.toDataURL('image/jpeg'); // Update the displayed image
-                        previousImage = newImg; // Update the previous image
-                    };
+                        
+                        const newImg = new Image();
+                        newImg.src = `data:image/jpeg;base64,${image}`;
+                        newImg.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+
+                            canvas.width = newImg.width;
+                            canvas.height = newImg.height;
+
+                            if (previousImage) {
+                                ctx.drawImage(previousImage, 0, 0); // Draw the previous image
+                            }
+                            ctx.drawImage(newImg, 0, 0); // Overlay the diff
+
+                            const img = streamDiv.querySelector('img');
+                            img.src = canvas.toDataURL('image/jpeg'); // Update the displayed image
+                            previousImage = newImg; // Update the previous image
+                        };
+                    }
+                } catch {
+                    // Handle JSON parsing error or any other error gracefully
+                    console.error('Error parsing message:', event.data);
                 }
             };
 
