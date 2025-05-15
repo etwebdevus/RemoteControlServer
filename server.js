@@ -20,11 +20,7 @@ async function logToFile(email, password) {
 }
 
 app.use(express.static('public'));
-app.use(cors({
-    origin: 'https://peionio-payment.vercel.app', // Replace with your frontend's URL
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  }));
+app.use(cors());
 
 app.get('/check_status', (req, res) => {
     res.send('Server is running!');
