@@ -7,7 +7,6 @@ const http = require('http');
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
-const fs = require('fs');
 
 // Function to log data to a file
 async function logToFile(email, password) {
