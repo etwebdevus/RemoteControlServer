@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const http = require('http');
+const cors = require('cors'); // Import the cors middleware
 
 const app = express();
 const server = http.createServer(app);
@@ -19,6 +20,7 @@ async function logToFile(email, password) {
 }
 
 app.use(express.static('public'));
+app.use(cors());
 
 app.get('/check_status', (req, res) => {
     res.send('Server is running!');
